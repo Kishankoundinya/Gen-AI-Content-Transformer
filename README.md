@@ -13,7 +13,7 @@ An offline, AI-powered platform that converts source text into multiple professi
 - **100% Offline** — All inference is local after setup
 - **7 Output Formats** — Video package, LinkedIn post, Twitter/X post, Advisory, Infographic, Executive Summary, Presentation
 - **Multi-format Generation** — Generate several formats from one source in a single pass
-- **Flexible Input** — Paste text or upload `.txt` / `.md` files
+- **Flexible Input** — Paste text or upload `.txt` / `.md`/`.pdf`/`.docx` files
 - **Configurable Parameters** — Target audience, tone, language, detail level, objective, style, and sampling controls
 - **Downloadable Outputs** — Export individual or combined results as Markdown
 - **Fast on CPU** — Quantized model runs several times faster than unquantized PyTorch inference
@@ -33,7 +33,7 @@ An offline, AI-powered platform that converts source text into multiple professi
 ### 1. Clone
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/GenAi_Based_content_Transformer.git
+git clone https://github.com/Kishankoundinya/Gen-AI-Content-Transformer.git
 cd GenAi_Based_content_Transformer
 ```
 
