@@ -10,3 +10,6 @@ models/
 .cache/
 *.bin
 *.safetensors
+frontend/node_modules/
+frontend/dist/
+.DS_Store

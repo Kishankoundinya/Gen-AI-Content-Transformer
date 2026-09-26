@@ -1,190 +1,193 @@
 # Gen AI Content Transformer
 
-An offline, AI-powered content transformation platform that converts source text into multiple professional output formats using **TinyLlama-1.1B-Chat-v1.0** running locally on your machine. No API keys, no internet required after setup.
+An offline, AI-powered platform that converts source text into multiple professional output formats. Uses **TinyLlama-1.1B-Chat-v1.0** (quantized via llama.cpp) running fully on your machine. No API keys, no cloud, no data leaves your computer.
+
+## Architecture
+
+- **Backend** — Python FastAPI server that hosts the model and a JSON API
+- **Frontend** — Modern React dashboard (built with Vite), served by the backend
+- **Inference** — `llama.cpp` with a Q4_K_M quantized model (~700MB) for fast CPU inference. On Apple Silicon this uses Metal acceleration and is several times faster than the PyTorch FP32 approach.
 
 ## Features
 
-- **100% Offline** — All inference runs locally using TinyLlama; no data leaves your machine
+- **100% Offline** — All inference is local after setup
 - **7 Output Formats** — Video package, LinkedIn post, Twitter/X post, Advisory, Infographic, Executive Summary, Presentation
-- **Multi-format Generation** — Select multiple output types and generate all from a single source
-- **Flexible Input** — Paste text directly or upload files (TXT, PDF, DOCX, Markdown)
-- **Configurable Parameters** — Control audience, tone, language, detail level, objective, style, temperature, and more
-- **Download Outputs** — Export individual or combined results as Markdown files
-- **Lightweight Model** — TinyLlama (~2GB) runs on CPU or GPU with minimal resources
+- **Multi-format Generation** — Generate several formats from one source in a single pass
+- **Flexible Input** — Paste text or upload `.txt` / `.md` files
+- **Configurable Parameters** — Target audience, tone, language, detail level, objective, style, and sampling controls
+- **Downloadable Outputs** — Export individual or combined results as Markdown
+- **Fast on CPU** — Quantized model runs several times faster than unquantized PyTorch inference
 
 ## Prerequisites
 
 | Requirement | Version |
 |---|---|
 | Python | 3.9 or higher |
+| Node.js | 18 or higher (only needed at setup time to build the UI) |
 | RAM | 4 GB minimum (8 GB recommended) |
-| Disk | 5 GB free (for model + dependencies) |
-| OS | macOS, Linux, or Windows (WSL2) |
+| Disk | 4 GB free |
+| OS | macOS, Linux, Windows (WSL2) |
 
 ## Quick Start
 
-### 1. Clone the Repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/GenAi_Based_content_Transformer.git
 cd GenAi_Based_content_Transformer
 ```
 
-### 2. Run Setup Script (Recommended)
+### 2. Setup
 
 ```bash
-chmod +x setup.sh
+chmod +x setup.sh run.sh
 ./setup.sh
 ```
 
-This creates a virtual environment, installs all dependencies, and configures Streamlit.
+This creates a Python virtual environment, installs backend dependencies, **downloads the quantized model once (~700MB)**, installs frontend dependencies, and builds the React UI.
 
-### 3. Manual Setup (Alternative)
+> The model is downloaded during setup, so generation is fast immediately after install.
 
-```bash
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-# .venv\Scripts\activate         # Windows (WSL2)
-
-# Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### 4. Launch the Application
+### 3. Run
 
 ```bash
-streamlit run app.py
+./run.sh
 ```
 
-The dashboard opens at **http://localhost:8501**. On first run, TinyLlama (~2GB) downloads automatically and is cached locally for future offline use.
+Open **http://localhost:8000** in your browser.
+
+The whole app runs from a single server: the FastAPI backend serves both the JSON API and the built React dashboard.
+
+## Development Mode
+
+For live frontend reloading during development:
+
+```bash
+./run.sh --dev
+```
+
+- Backend runs on `http://localhost:8000`
+- Vite dev server runs on `http://localhost:5173` and proxies `/api` to the backend
 
 ## Usage
 
-### Input Content
-- **Text Input** — Type or paste source content directly
-- **File Upload** — Upload `.txt`, `.pdf`, `.docx`, or `.md` files
+1. **Paste or upload source content** in the left panel.
+2. **Select one or more output formats** (tiles toggle on/off).
+3. **Adjust parameters** — audience, tone, language, level of detail, objective, style, max tokens, temperature, top-p.
+4. Click **Generate Content**. Each selected format is generated in sequence with a progress indicator.
+5. **Review results** in the right panel and **Download** the ones you want.
 
-### Select Output Types
-Check one or more output formats:
+### Output Types
 
 | Output Type | What It Generates |
 |---|---|
-| **Video** | Script, storyboard, scene descriptions, narration, subtitles, visual recommendations |
-| **LinkedIn Post** | Professional post with hook, body, hashtags, ready to publish |
-| **Twitter/X Post** | Single tweet + tweet thread + engagement tweet |
-| **Advisory** | Structured advisory with findings, risks, recommendations |
-| **Infographic** | Content sections, layout recommendations, key messaging |
-| **Executive Summary** | Concise briefing with key points, recommendations, next steps |
-| **Presentation** | Slide-by-slide content with speaker notes and design tips |
+| Video | Script, storyboard, scene descriptions, narration, subtitles, visual recommendations |
+| LinkedIn Post | Professional post ready to publish |
+| Twitter/X Post | Single tweet + tweet thread + engagement tweet |
+| Advisory | Structured advisory with findings, risks, recommendations |
+| Infographic | Content sections, layout recommendations, key messaging |
+| Executive Summary | Concise briefing with key points, recommendations, next steps |
+| Presentation | Slide-by-slide content with speaker notes and design tips |
 
-### Configure Parameters
-Adjust generation parameters in the sidebar and main panel:
-- **Max Output Tokens** — Controls output length (256–2048)
-- **Temperature** — Creativity level (0.1 = focused, 1.5 = creative)
-- **Top-P** — Nucleus sampling threshold
-- **Target Audience** — Who the content is for
-- **Tone** — Professional, casual, formal, persuasive, etc.
-- **Language** — Output language (default: English)
-- **Level of Detail** — Very concise to very detailed
-- **Communication Objective** — The goal of the content
-- **Content Style** — Blog, academic, marketing, etc.
+## Backend API
 
-### Generate & Download
-Click **Generate Content**, review outputs in tabs, and download individual files or all outputs combined as Markdown.
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/health` | GET | Backend + model status |
+| `/api/model-info` | GET | Active backend and model details |
+| `/api/output-types` | GET | Available output types |
+| `/api/generate` | POST | Generate one output type |
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "output_type": "LinkedIn Post",
+    "source_content": "Our company reduced costs by 30% using AI automation...",
+    "tone": "Professional",
+    "max_new_tokens": 1024
+  }'
+```
 
 ## Project Structure
 
 ```
 GenAi_Based_content_Transformer/
-├── app.py                  # Streamlit dashboard (main entry point)
-├── model_loader.py         # TinyLlama model loading and inference
-├── prompt_templates.py     # Engineered prompts for each output type
-├── output_generators.py    # Generation orchestration logic
-├── requirements.txt        # Python dependencies
-├── setup.sh                # Automated setup script
-├── .streamlit/
-│   └── config.toml         # Streamlit theme configuration
-├── .gitignore              # Git ignore rules
-└── README.md               # This file
+├── backend/
+│   ├── api.py                # FastAPI server + static frontend serving
+│   ├── model_service.py      # llama.cpp primary, transformers fallback
+│   ├── hub_download.py       # Downloads quantized model during setup
+│   ├── prompt_templates.py   # Prompts for each output type
+│   ├── output_generators.py  # Generation orchestration
+│   └── requirements.txt      # Python dependencies
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.js        # Dev proxy to backend
+│   ├── package.json
+│   └── src/
+│       ├── App.jsx           # Main dashboard
+│       ├── styles.css        # Styling
+│       ├── services/api.js   # Backend API client
+│       └── components/
+│           ├── InputPanel.jsx          # Step 1: source content
+│           ├── OutputTypeSelector.jsx  # Step 2: output types
+│           ├── ParametersPanel.jsx     # Step 3: parameters
+│           └── OutputPanel.jsx         # Results + download
+├── models/                   # Downloaded GGUF model (created by setup)
+├── setup.sh                  # One-command setup
+├── run.sh                    # Launch the app
+├── .gitignore
+└── README.md
 ```
-
-## Dependencies
-
-| Package | Purpose |
-|---|---|
-| `streamlit` | Web-based dashboard UI |
-| `torch` | PyTorch for model inference |
-| `transformers` | Hugging Face model loading |
-| `accelerate` | Device mapping and optimization |
-| `sentencepiece` | Tokenizer backend |
-| `PyPDF2` | PDF file reading |
-| `python-docx` | DOCX file reading |
-| `Pillow` | Image processing support |
-| `plotly` | Charting support |
-| `markdown` | Markdown rendering |
-
-## Model Details
-
-| Property | Value |
-|---|---|
-| Model | `TinyLlama/TinyLlama-1.1B-Chat-v1.0` |
-| Parameters | ~1.1 Billion |
-| Architecture | LLaMA 2 based |
-| Precision | FP16 (GPU) / FP32 (CPU on macOS) |
-| Context Window | 2048 tokens |
-| License | Apache 2.0 |
-
-The model is downloaded from Hugging Face on first run and cached in `~/.cache/huggingface/`.
 
 ## Platform Notes
 
-| Platform | Device | Precision | Notes |
-|---|---|---|---|
-| Linux (NVIDIA GPU) | GPU (CUDA) | FP16 | Fastest. Automatic GPU detection. |
-| macOS (Apple Silicon) | CPU | FP32 | MPS not supported for TinyLlama. Runs on CPU — slower but stable. |
-| macOS (Intel) | CPU | FP32 | Runs on CPU. |
-| Windows (WSL2 + NVIDIA) | GPU (CUDA) | FP16 | Requires WSL2 with CUDA support. |
+| Platform | Inference Backend | Notes |
+|---|---|---|
+| macOS (Apple Silicon) | llama.cpp with Metal | Fastest on Mac |
+| Linux (with NVIDIA GPU) | llama.cpp (CUDA build) | Fastest overall |
+| Linux (CPU) | llama.cpp | Fast, quantized CPU inference |
+| Windows (WSL2 + NVIDIA) | llama.cpp (CUDA build) | Requires WSL2 |
+
+If `llama-cpp-python` cannot be installed, the app automatically falls back to a Hugging Face `transformers` backend (slower but functional).
 
 ## Troubleshooting
 
-**Model download fails:**
-Ensure you have internet for the first run. After download, the model works fully offline.
-
-**`Placeholder storage has not been allocated on MPS device` (macOS):**
-The app automatically avoids MPS and runs on CPU. If you still see this error, clear the model cache and restart:
+**Setup fails while installing `llama-cpp-python`:**
+The base install may require compilation on some platforms. The setup script retries automatically. If it still fails, the app falls back to the `transformers` backend:
 ```bash
-rm -rf ~/.cache/huggingface/hub/models--TinyLlama--TinyLlama-1.1B-Chat-v1.0
-streamlit run app.py
+./setup.sh
 ```
 
-**Out of memory:**
-- Reduce `Max Output Tokens` in the sidebar
-- Close other applications to free RAM
-- The model uses ~2GB RAM on CPU, ~4GB on GPU
+**Model download fails:**
+You need internet for the one-time model download. After that the app works fully offline.
 
 **Slow generation:**
-- Reduce `Max Output Tokens` for faster results
-- Lower `Temperature` for more deterministic output
-- On macOS, generation is slower on CPU — this is expected. Use shorter source content for faster results.
-- On Linux with NVIDIA GPU, generation is significantly faster.
+- Reduce `Max Output Tokens` (256-384 is usually plenty)
+- Generate one output type at a time instead of several
+- Use shorter source content (context window is 2048 tokens total)
+- `llama.cpp` Metal/CUDA builds are significantly faster than CPU
 
 **Empty or poor-quality output:**
-- Try shorter source content (the context window is 2048 tokens total)
-- Select fewer output types at once (generate one at a time for best results)
-- Adjust `Temperature` (lower = more focused, e.g., 0.5)
+- Try shorter source content
+- Lower `Temperature` for more focused output (e.g., 0.5)
+- The 1.1B model cannot handle extremely complex instructions; keep source content focused
 
-**Import errors:**
+**Port already in use:**
 ```bash
-pip install -r requirements.txt
+./run.sh  # editing PORT? Use:
+uvicorn backend.api:app --host 0.0.0.0 --port 8501
 ```
 
-**Streamlit port already in use:**
+**Clear cached model and rebuild:**
 ```bash
-streamlit run app.py --server.port 8502
+rm -rf models/
+rm -rf .venv frontend/node_modules frontend/dist
+./setup.sh
 ```
 
 ## License
 
-This project uses the TinyLlama model which is licensed under [Apache 2.0](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0/blob/main/LICENSE).
+The TinyLlama model is licensed under [Apache 2.0](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0/blob/main/LICENSE).
