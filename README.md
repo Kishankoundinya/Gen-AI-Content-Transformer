@@ -34,7 +34,7 @@ An offline, AI-powered platform that converts source text into multiple professi
 
 ```bash
 git clone https://github.com/Kishankoundinya/Gen-AI-Content-Transformer.git
-cd GenAi_Based_content_Transformer
+cd Gen-AI-Content-Transformer
 ```
 
 ### 2. Setup
