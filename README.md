@@ -48,6 +48,8 @@ This creates a Python virtual environment, installs backend dependencies, **down
 
 > The model is downloaded during setup, so generation is fast immediately after install.
 
+## Model Downloading may take a while depending upon your internet speed , you may get backend error if model was not downloaded it will be downloaded in the background. 
+
 ### 3. Run
 
 ```bash
